@@ -2,15 +2,24 @@
 pragma solidity ^0.8.20;
 
 interface IERC20 {
+    /// @notice transferFrom - core operation
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
 interface IERC721 {
+    /// @notice transferFrom - core operation
     function transferFrom(address from, address to, uint256 tokenId) external;
+    /// @notice ownerOf - core operation
     function ownerOf(uint256 tokenId) external view returns (address);
 }
 
+/// @title NftMarketLite
+/// @notice Core contract for NftMarketLite on Arc Network
+/// @dev Built with Foundry, deployed on Arc testnet (Chain ID: 5042002)
 contract NftMarketLite {
+    /// @notice Contract version
+    string public constant VERSION = "1.1.0";
+
     IERC20 public immutable usdc;
     address public owner;
     uint256 public feeBps = 250; // 2.5%
@@ -36,6 +45,7 @@ contract NftMarketLite {
 
     modifier onlyOwner() { require(msg.sender == owner, "NOT_OWNER"); _; }
 
+    /// @notice list - core operation
     function list(address nft, uint256 tokenId, uint256 price) external returns (uint256) {
         require(IERC721(nft).ownerOf(tokenId) == msg.sender, "NOT_NFT_OWNER");
         listings.push(Listing(msg.sender, nft, tokenId, price, true));
@@ -43,6 +53,7 @@ contract NftMarketLite {
         return listings.length - 1;
     }
 
+    /// @notice buy - core operation
     function buy(uint256 id) external {
         Listing storage l = listings[id];
         require(l.active, "NOT_ACTIVE");
@@ -54,6 +65,7 @@ contract NftMarketLite {
         emit Sold(id, msg.sender, l.price);
     }
 
+    /// @notice cancel - core operation
     function cancel(uint256 id) external {
         Listing storage l = listings[id];
         require(l.seller == msg.sender && l.active, "CANNOT");
@@ -61,5 +73,6 @@ contract NftMarketLite {
         emit Cancelled(id);
     }
 
+    /// @notice setFee - core operation
     function setFee(uint256 _feeBps) external onlyOwner { feeBps = _feeBps; }
 }
